@@ -1,0 +1,6 @@
+name: traillens-ai
+runtime: python
+description: TrailLens AI Infrastructure - AWS Bedrock with Claude Sonnet 4.5
+
+# This project deploys AWS Bedrock resources for Claude integration
+# Used by Claude Code and Continue.dev VSCode extensions for AI-assisted development
