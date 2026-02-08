@@ -4,12 +4,12 @@
 # This file is proprietary and confidential.
 
 """
-AWS Bedrock component for TrailLens AI infrastructure.
+AWS Bedrock IAM component for TrailLens AI infrastructure.
 
 This component deploys:
-- IAM roles and policies for Bedrock access
-- API Gateway for Bedrock proxy
-- Lambda function for request handling
+- IAM user for Bedrock access
+- Access keys for authentication
+- Policies for Claude Opus 4.6, Sonnet 4.5, and Haiku 4.5
 """
 
 import json
@@ -18,132 +18,87 @@ import pulumi
 import pulumi_aws as aws
 
 
-def create_bedrock_stack(environment, project_name, bedrock_model_id, tags):
+def create_bedrock_iam_stack(project_name, region, tags):
     """
-    Create AWS Bedrock stack with Claude Sonnet 4.5 access.
+    Create AWS Bedrock IAM stack for direct API access.
+
+    This creates a simplified IAM setup for single developer use with support
+    for all three Claude models (Opus, Sonnet, Haiku).
 
     Args:
-        environment: The environment (dev or prod).
         project_name: The project name.
-        bedrock_model_id: The Bedrock model ID to use.
+        region: AWS region for Bedrock.
         tags: Resource tags.
 
     Returns:
-        dict: Dictionary containing Bedrock resources.
+        dict: Dictionary containing IAM resources and credentials.
     """
-    stack_name = f"{project_name}-ai-{environment}"
+    stack_name = f"{project_name}-ai"
 
-    pulumi.log.info(f"Creating Bedrock stack: {stack_name}")
+    pulumi.log.info(f"Creating Bedrock IAM stack: {stack_name}")
 
-    # Create IAM role for Bedrock access
-    bedrock_role = aws.iam.Role(
-        f"{stack_name}-bedrock-role",
-        assume_role_policy=json.dumps({
-            "Version": "2012-10-17",
-            "Statement": [{
-                "Action": "sts:AssumeRole",
-                "Effect": "Allow",
-                "Principal": {
-                    "Service": ["lambda.amazonaws.com", "apigateway.amazonaws.com"]
-                }
-            }]
-        }),
-        tags={**tags, "Name": f"{stack_name}-bedrock-role"},
+    # Create IAM user for Bedrock access
+    bedrock_user = aws.iam.User(
+        f"{stack_name}-bedrock-user",
+        name=f"{stack_name}-bedrock-user",
+        tags={**tags, "Name": f"{stack_name}-bedrock-user"},
     )
 
-    # Create IAM policy for Bedrock model access
-    bedrock_policy = aws.iam.RolePolicy(
+    # Create access key for the user
+    access_key = aws.iam.AccessKey(
+        f"{stack_name}-access-key",
+        user=bedrock_user.name,
+    )
+
+    # Create IAM policy for all Claude models
+    # Supports: Opus 4.6, Sonnet 4.5, Haiku 4.5
+    bedrock_policy = aws.iam.UserPolicy(
         f"{stack_name}-bedrock-policy",
-        role=bedrock_role.id,
+        user=bedrock_user.name,
         policy=json.dumps({
             "Version": "2012-10-17",
             "Statement": [
                 {
+                    "Sid": "BedrockModelAccess",
                     "Effect": "Allow",
                     "Action": [
                         "bedrock:InvokeModel",
                         "bedrock:InvokeModelWithResponseStream",
-                        "bedrock:ListFoundationModels",
-                        "bedrock:GetFoundationModel",
                     ],
                     "Resource": [
-                        f"arn:aws:bedrock:*::foundation-model/{bedrock_model_id}",
-                        "arn:aws:bedrock:*::foundation-model/anthropic.claude*",
+                        # Opus 4.6
+                        f"arn:aws:bedrock:{region}::foundation-model/anthropic.claude-opus-4-6",
+                        # Sonnet 4.5
+                        f"arn:aws:bedrock:{region}::foundation-model/anthropic.claude-sonnet-4-5-v2:0",
+                        # Haiku 4.5
+                        f"arn:aws:bedrock:{region}::foundation-model/anthropic.claude-haiku-4-5-20251001:0",
+                        # Allow all Claude models (for future versions)
+                        f"arn:aws:bedrock:{region}::foundation-model/anthropic.claude*",
                     ]
                 },
                 {
+                    "Sid": "BedrockModelList",
                     "Effect": "Allow",
                     "Action": [
-                        "logs:CreateLogGroup",
-                        "logs:CreateLogStream",
-                        "logs:PutLogEvents",
+                        "bedrock:ListFoundationModels",
+                        "bedrock:GetFoundationModel",
                     ],
-                    "Resource": "arn:aws:logs:*:*:*"
+                    "Resource": "*"
                 }
             ]
         }),
     )
 
-    # Create Lambda execution role
-    lambda_role = aws.iam.Role(
-        f"{stack_name}-lambda-role",
-        assume_role_policy=json.dumps({
-            "Version": "2012-10-17",
-            "Statement": [{
-                "Action": "sts:AssumeRole",
-                "Effect": "Allow",
-                "Principal": {
-                    "Service": "lambda.amazonaws.com"
-                }
-            }]
-        }),
-        tags={**tags, "Name": f"{stack_name}-lambda-role"},
-    )
-
-    # Attach basic Lambda execution policy
-    lambda_basic_execution = aws.iam.RolePolicyAttachment(
-        f"{stack_name}-lambda-basic-execution",
-        role=lambda_role.name,
-        policy_arn="arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
-    )
-
-    # Create Lambda policy for Bedrock access
-    lambda_bedrock_policy = aws.iam.RolePolicy(
-        f"{stack_name}-lambda-bedrock-policy",
-        role=lambda_role.id,
-        policy=json.dumps({
-            "Version": "2012-10-17",
-            "Statement": [{
-                "Effect": "Allow",
-                "Action": [
-                    "bedrock:InvokeModel",
-                    "bedrock:InvokeModelWithResponseStream",
-                ],
-                "Resource": [
-                    f"arn:aws:bedrock:*::foundation-model/{bedrock_model_id}",
-                    "arn:aws:bedrock:*::foundation-model/anthropic.claude*",
-                ]
-            }]
-        }),
-    )
-
-    # Create CloudWatch log group for API Gateway
-    api_log_group = aws.cloudwatch.LogGroup(
-        f"{stack_name}-api-logs",
-        name=f"/aws/apigateway/{stack_name}",
-        retention_in_days=7,
-        tags=tags,
-    )
+    pulumi.log.info("✓ IAM user and policies created")
+    pulumi.log.info(f"  User: {bedrock_user.name}")
+    pulumi.log.info("  Models: Opus 4.6, Sonnet 4.5, Haiku 4.5")
 
     # Return resources
     return {
-        "bedrock_role": bedrock_role,
+        "iam_user": bedrock_user,
+        "iam_user_name": bedrock_user.name,
+        "iam_user_arn": bedrock_user.arn,
         "bedrock_policy": bedrock_policy,
-        "lambda_role": lambda_role,
-        "lambda_basic_execution": lambda_basic_execution,
-        "lambda_bedrock_policy": lambda_bedrock_policy,
-        "api_log_group": api_log_group,
-        "bedrock_role_arn": bedrock_role.arn,
-        "lambda_role_arn": lambda_role.arn,
-        "model_id": bedrock_model_id,
+        "access_key_id": access_key.id,
+        "secret_access_key": access_key.secret,
     }

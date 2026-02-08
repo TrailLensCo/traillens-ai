@@ -3,5 +3,8 @@ config:
   traillens-ai:project_name: traillens
   traillens-ai:region: ca-central-1
   traillens-ai:domain: ai.traillenshq.com
-  traillens-ai:bedrock_model_id: anthropic.claude-sonnet-4-5-v2:0
-  traillens-ai:enable_bedrock: true
+  traillens-ai:zone_name: traillenshq.com
+  traillens-ai:tag_project: TrailLens
+  traillens-ai:tag_environment: prod
+  traillens-ai:tag_managed_by: Pulumi
+  traillens-ai:tag_repository: traillens-ai
