@@ -159,13 +159,36 @@ export AWS_REGION="ca-central-1"
    gh pr create --fill
    ```
 
-6. After PR approval, deploy to prod:
-   ```bash
-   cd pulumi
-   source ../scripts/setup-env.sh
-   pulumi stack select prod
-   pulumi up
-   ```
+6. After PR approval → **MANUAL PRODUCTION DEPLOYMENT REQUIRED** (see Production Deployment Policy below)
+
+### 🚨 PRODUCTION DEPLOYMENT RESTRICTION (CRITICAL)
+
+**IMMUTABLE RULE:** NEVER deploy to production automatically or via AI assistance.
+
+Production deployments are **STRICTLY MANUAL ONLY** and require explicit human approval and execution.
+
+**ABSOLUTE PROHIBITIONS:**
+
+- ❌ **NEVER** run `pulumi up` on production AI stack
+- ❌ **NEVER** run `pulumi up -s prod` or deployment scripts targeting production
+- ❌ **NEVER** update production Bedrock/API Gateway configuration automatically
+- ❌ **NEVER** suggest or recommend production deployments
+
+**PERMITTED ACTIONS:**
+
+- ✅ Run `pulumi preview -s prod` to see what WOULD change (read-only)
+- ✅ Deploy to dev environment with user confirmation
+- ✅ Prepare deployment plans and document changes
+- ✅ Review and validate infrastructure code
+
+**IF PRODUCTION DEPLOYMENT IS REQUESTED:**
+
+1. **STOP** and confirm the target environment
+2. If target is production → **REFUSE** and explain this policy
+3. Provide instructions for manual deployment instead
+4. Document what needs to be deployed and why
+
+**Violating this policy could result in AI service outages affecting all applications.**
 
 ### Code Standards
 
