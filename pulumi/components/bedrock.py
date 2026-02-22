@@ -81,6 +81,22 @@ def create_bedrock_iam_stack(project_name, region, tags):
                         ],
                     },
                     {
+                        "Sid": "BedrockInferenceProfileAccess",
+                        "Effect": "Allow",
+                        "Action": [
+                            "bedrock:InvokeModel",
+                            "bedrock:InvokeModelWithResponseStream",
+                        ],
+                        "Resource": [
+                            # Inference profiles for Claude models (required for 4.6 models)
+                            # Allows all regions because inference profiles route across regions
+                            "arn:aws:bedrock:*:*:inference-profile/us.anthropic.claude-*",
+                            "arn:aws:bedrock:*:*:inference-profile/global.anthropic.claude-*",
+                            # Allow underlying foundation models in all regions
+                            "arn:aws:bedrock:*::foundation-model/anthropic.claude-*",
+                        ],
+                    },
+                    {
                         "Sid": "BedrockImageModelAccess",
                         "Effect": "Allow",
                         "Action": [
