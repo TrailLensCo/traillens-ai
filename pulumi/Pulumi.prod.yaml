@@ -8,3 +8,6 @@ config:
   traillens-ai:tag_environment: prod
   traillens-ai:tag_managed_by: Pulumi
   traillens-ai:tag_repository: traillens-ai
+  traillens-ai:budgetAlertEmail: mark@buckaway.ca
+  traillens-ai:budget_alert_email: mark@buckaway.ca
+encryptionsalt: v1:cPx55MpBVKY=:v1:QdijiF7QuUVWzBqG:7wvSmjBKNhPzbGZ5tj23aZbiWsyybw==

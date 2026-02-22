@@ -18,7 +18,7 @@ Supported Models:
 import pulumi
 
 from components.bedrock import create_bedrock_iam_stack
-from components.dns import create_dns_stack
+from components.budget import create_budget_stack
 from utils.config import load_config, validate_config
 
 
@@ -63,16 +63,14 @@ def main():
     )
 
     # ==========================================================================
-    # DNS Configuration
+    # AWS Budget Setup
     # ==========================================================================
 
-    pulumi.log.info("Creating DNS CNAME to Bedrock endpoint...")
+    pulumi.log.info("Creating AWS Budget for cost monitoring...")
 
-    dns = create_dns_stack(
+    budget = create_budget_stack(
         project_name=config["project_name"],
-        domain=config["domain"],
-        region=config["region"],
-        zone_name=config["zone_name"],
+        email=config["budget_alert_email"],
         tags=config.get("tags", {}),
     )
 
@@ -85,13 +83,17 @@ def main():
     pulumi.export("access_key_id", bedrock["access_key_id"])
     pulumi.export("secret_access_key", bedrock["secret_access_key"])
     pulumi.export("region", config["region"])
-    pulumi.export("bedrock_endpoint", dns["bedrock_endpoint"])
-    pulumi.export("custom_domain", dns["domain_name"])
-    pulumi.export("models", {
-        "opus": "anthropic.claude-opus-4-6",
-        "sonnet": "anthropic.claude-sonnet-4-5-v2:0",
-        "haiku": "anthropic.claude-haiku-4-5-20251001:0",
-    })
+    pulumi.export("budget_topic_arn", budget["budget_topic_arn"])
+    pulumi.export("budget_id", budget["budget_id"])
+    pulumi.export(
+        "models",
+        {
+            "opus": "anthropic.claude-opus-4-6-v1",
+            "sonnet": "anthropic.claude-sonnet-4-6",
+            "haiku": "anthropic.claude-haiku-4-5-20251001-v1:0",
+            "titan_image": "amazon.titan-image-generator-v2:0",
+        },
+    )
 
     pulumi.log.info("✓ TrailLens AI infrastructure deployment complete!")
     pulumi.log.info("")

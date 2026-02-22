@@ -26,6 +26,7 @@ def load_config():
     region = config.require("region")
     domain = config.require("domain")
     zone_name = config.require("zone_name")
+    budget_alert_email = config.require("budget_alert_email")
 
     # Load configuration values
     config_dict = {
@@ -33,6 +34,7 @@ def load_config():
         "region": region,
         "domain": domain,
         "zone_name": zone_name,
+        "budget_alert_email": budget_alert_email,
         "tags": {
             "Project": config.get("tag_project") or "TrailLens",
             "Environment": config.get("tag_environment") or "prod",
@@ -58,7 +60,13 @@ def validate_config(config):
     Raises:
         Exception: If configuration is invalid.
     """
-    required_keys = ["project_name", "region", "domain", "zone_name"]
+    required_keys = [
+        "project_name",
+        "region",
+        "domain",
+        "zone_name",
+        "budget_alert_email",
+    ]
 
     for key in required_keys:
         if key not in config or not config[key]:
