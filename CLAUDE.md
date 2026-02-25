@@ -4,38 +4,36 @@ This file provides guidance to Claude Code when working with the TrailLens AI in
 
 ## AI Model Requirement
 
-**CRITICAL**: All code generation, documentation, refactoring, and AI-assisted development work **MUST** use **Claude Sonnet 4.5** exclusively.
+**CRITICAL**: All code generation, documentation, refactoring, and AI-assisted development work **MUST** use **the latest Claude Sonnet** model exclusively.
 
-**If Claude Sonnet 4.5 is not available or any other model is selected, STOP ALL GENERATION IMMEDIATELY and inform the user to switch to Claude Sonnet 4.5.**
+**If the latest Claude Sonnet is not available or any other model is selected, STOP ALL GENERATION IMMEDIATELY and inform the user to switch to the latest Claude Sonnet.**
 
 ## Repository Overview
 
-TrailLens AI Infrastructure - AWS Bedrock deployment with Claude Sonnet 4.5 for AI-assisted development.
+TrailLens AI Infrastructure - AWS Bedrock deployment with the latest Claude Sonnet for AI-assisted development.
+
+**CRITICAL PYTHON REQUIREMENT**: This project **REQUIRES Python 3.14**. This is the current Python version and MUST be used for all development, testing, and deployment. Do NOT use older Python versions.
 
 This repository deploys:
-- AWS Bedrock with Claude Sonnet 4.5 model access
-- API Gateway proxy for Bedrock API calls
-- Custom domain configuration (ai.traillenshq.com / ai.dev.traillenshq.com)
+
+- AWS Bedrock with direct IAM user access
 - IAM roles and policies for secure Bedrock access
+- AWS Budget for cost monitoring and alerts
+- LiteLLM proxy for OpenAI-compatible API (local/Docker)
 
 ## Architecture
 
 ### Components
 
 1. **Bedrock** ([components/bedrock.py](pulumi/components/bedrock.py))
-   - IAM roles for Bedrock and Lambda
-   - IAM policies for model access
-   - CloudWatch log groups
+   - IAM user with programmatic access
+   - IAM policies for Bedrock model access
+   - Access credentials for direct API calls
 
-2. **API Gateway** ([components/api.py](pulumi/components/api.py))
-   - REST API for Bedrock proxy
-   - Stage configuration (dev/prod)
-   - CloudWatch logging
-
-3. **DNS** ([components/dns.py](pulumi/components/dns.py))
-   - ACM certificate for HTTPS
-   - Route53 A records
-   - Custom domain mapping
+2. **Budget** ([components/budget.py](pulumi/components/budget.py))
+   - AWS Budget for cost monitoring
+   - SNS topic for budget alerts
+   - Email notifications for cost thresholds
 
 ### Environment Setup
 
@@ -94,7 +92,7 @@ Configuration is managed via stack files:
 
 ### Key Configuration Values
 
-- `bedrock_model_id`: Model identifier (default: `anthropic.claude-sonnet-4-5-v2:0`)
+- `bedrock_model_id`: Model identifier (use the latest Claude Sonnet model ID available in AWS Bedrock)
 - `domain`: Custom domain name
 - `region`: AWS region (must be `ca-central-1`)
 
@@ -107,7 +105,7 @@ To configure VSCode extensions to use the deployed Bedrock endpoint:
 ```bash
 # For Continue.dev
 export CONTINUE_API_ENDPOINT="https://ai.traillenshq.com"
-export CONTINUE_MODEL="anthropic.claude-sonnet-4-5-v2:0"
+export CONTINUE_MODEL="<latest-claude-sonnet-model-id>"
 
 # For Claude Code (if custom endpoint supported)
 export CLAUDE_API_BASE_URL="https://ai.traillenshq.com"
@@ -171,7 +169,7 @@ Production deployments are **STRICTLY MANUAL ONLY** and require explicit human a
 
 - ❌ **NEVER** run `pulumi up` on production AI stack
 - ❌ **NEVER** run `pulumi up -s prod` or deployment scripts targeting production
-- ❌ **NEVER** update production Bedrock/API Gateway configuration automatically
+- ❌ **NEVER** update production Bedrock IAM configuration automatically
 - ❌ **NEVER** suggest or recommend production deployments
 
 **PERMITTED ACTIONS:**
@@ -212,32 +210,26 @@ aws acm describe-certificate --certificate-arn <arn>
 dig ai.dev.traillenshq.com
 ```
 
-### API Gateway 403 Errors
-
-Check IAM role permissions:
-```bash
-aws iam get-role-policy --role-name traillens-ai-dev-bedrock-role --policy-name traillens-ai-dev-bedrock-policy
-```
-
 ### Bedrock Access Denied
 
 Ensure Bedrock model access is enabled in AWS Console:
 ```
 AWS Console → Bedrock → Model access → Manage model access
-Enable: Claude Sonnet 4.5
+Enable: Latest Claude Sonnet model
 ```
 
 ## Outputs
 
 After deployment, these outputs are available:
 
-- `bedrock_role_arn`: IAM role for Bedrock access
-- `lambda_role_arn`: IAM role for Lambda functions
-- `model_id`: Bedrock model identifier
-- `api_endpoint`: API Gateway endpoint URL
-- `domain_name`: Custom domain name
-- `certificate_arn`: ACM certificate ARN
-- `custom_domain_endpoint`: HTTPS endpoint with custom domain
+- `iam_user_name`: IAM user for Bedrock access
+- `iam_user_arn`: ARN of the IAM user
+- `access_key_id`: AWS access key ID (sensitive)
+- `secret_access_key`: AWS secret access key (sensitive)
+- `region`: AWS region (ca-central-1)
+- `budget_topic_arn`: SNS topic for budget alerts
+- `budget_id`: AWS Budget identifier
+- `models`: Supported Bedrock model IDs
 
 ## Related Documentation
 
