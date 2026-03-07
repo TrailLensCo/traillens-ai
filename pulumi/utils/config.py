@@ -75,8 +75,7 @@ def validate_config(config):
     # Validate region
     if config["region"] != "ca-central-1":
         raise Exception(
-            f"Invalid region: {config['region']}. "
-            "All TrailLens infrastructure must be deployed to ca-central-1"
+            f"Invalid region: {config['region']}. " "All TrailLens infrastructure must be deployed to ca-central-1"
         )
 
     pulumi.log.info("✓ Configuration validation passed")

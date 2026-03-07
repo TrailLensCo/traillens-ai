@@ -1,0 +1,87 @@
+{
+  "provider": {
+    "litellm": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "LiteLLM (AWS Bedrock)",
+      "options": {
+        "baseURL": "http://litellm:4000",
+        "apiKey": "{env:LITELLM_MASTER_KEY}"
+      },
+      "models": {
+        "claude-sonnet-4-6": {
+          "name": "Claude Sonnet 4.6",
+          "limit": {
+            "context": 200000,
+            "output": 8192
+          }
+        },
+        "claude-sonnet-4-5": {
+          "name": "Claude Sonnet 4.5",
+          "limit": {
+            "context": 200000,
+            "output": 8192
+          }
+        },
+        "claude-haiku-4-5": {
+          "name": "Claude Haiku 4.5 (Fast/Autocomplete)",
+          "limit": {
+            "context": 200000,
+            "output": 8192
+          }
+        },
+        "claude-opus-4-6": {
+          "name": "Claude Opus 4.6",
+          "limit": {
+            "context": 200000,
+            "output": 8192
+          }
+        },
+        "llama3-70b": {
+          "name": "Meta Llama 3 70B Instruct",
+          "limit": {
+            "context": 8192,
+            "output": 2048
+          }
+        },
+        "kimi-k2-5": {
+          "name": "Kimi K2.5 (Multimodal + Agent Swarm)",
+          "limit": {
+            "context": 256000,
+            "output": 8192
+          }
+        },
+        "titan-image-v2": {
+          "name": "Titan Image Generator V2",
+          "limit": {
+            "context": 4096,
+            "output": 1024
+          }
+        },
+        "titan-embed-v2": {
+          "name": "Titan Embed Text V2",
+          "limit": {
+            "context": 8192,
+            "output": 1024
+          }
+        },
+        "cohere-rerank-v3-5": {
+          "name": "Cohere Rerank V3.5",
+          "limit": {
+            "context": 4096,
+            "output": 1024
+          }
+        }
+      }
+    }
+  },
+  "model": "claude-sonnet-4-6",
+  "server": {
+    "port": 3001,
+    "hostname": "0.0.0.0",
+    "mdns": true,
+    "mdnsDomain": "opencode.local"
+  },
+  "plugin": [
+    "opencode-mobile@latest"
+  ]
+}

@@ -2,7 +2,7 @@
 
 Simplified AWS Bedrock infrastructure for single developer use with Continue.dev.
 
-Supports **Claude Opus 4.6**, **Claude Sonnet 4.5**, and **Claude Haiku 4.5** for AI-assisted development.
+Supports **Claude Opus 4.6**, **Claude Sonnet 4.6**, and **Claude Haiku 4.5** for AI-assisted development.
 
 ## Quick Start
 

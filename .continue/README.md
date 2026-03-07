@@ -47,6 +47,7 @@ copy config.yaml %USERPROFILE%\.continue\config.yaml
 ### Tab Autocomplete
 
 Configured to use **Claude Haiku 4.5** for inline code completion:
+
 - Fast response times
 - Low cost
 - Max tokens: 500 (sufficient for completions)
@@ -54,6 +55,39 @@ Configured to use **Claude Haiku 4.5** for inline code completion:
 ### Embeddings
 
 Uses **Amazon Titan Embed Text v2** for code context and similarity search.
+
+### Context Providers
+
+Context providers allow you to type '@' in Continue's chat to inject specific content into the conversation. The following providers are enabled:
+
+| Provider | Usage | Description |
+| -------- | ----- | ----------- |
+| **@file** | `@file path/to/file.py` | Reference any file in your workspace |
+| **@code** | `@code MyClass.method` | Reference specific functions or classes |
+| **@diff** | `@diff` | Review changes on current branch |
+| **@currentFile** | `@currentFile` | Reference the currently open file |
+| **@terminal** | `@terminal` | Include last terminal command and output |
+| **@open** | `@open` | Include all open files in editor |
+| **@clipboard** | `@clipboard` | Reference recent clipboard items |
+| **@tree** | `@tree` | Show workspace structure |
+| **@problems** | `@problems` | Include issues from current file |
+| **@debugger** | `@debugger` | Include local variables (VS Code only) |
+| **@repo-map** | `@repo-map` | Include codebase outline with signatures |
+| **@os** | `@os` | Include OS architecture and platform |
+
+**Example Usage:**
+
+```text
+@file CLAUDE.md @diff Can you help me understand these changes and ensure they follow the constitution?
+```
+
+```text
+@code TrailService @problems Why is this class throwing errors?
+```
+
+```text
+@terminal @currentFile The tests failed, can you help me fix this?
+```
 
 ## AWS Credentials
 
@@ -176,6 +210,7 @@ aws bedrock list-foundation-models --region ca-central-1 | grep claude
 ### Slow Responses
 
 **Solution**:
+
 - Use Haiku for quick tasks
 - Check AWS region latency
 - Reduce `maxTokens` if responses are too long
