@@ -1,0 +1,56 @@
+models:
+  - title: Claude Opus 4.6 (Planning)
+    provider: bedrock
+    model: anthropic.claude-opus-4-6
+    region: ca-central-1
+    contextLength: 200000
+    completionOptions:
+      temperature: 0.0
+      maxTokens: 8192
+
+  - title: Claude Sonnet 4.5 (Coding)
+    provider: bedrock
+    model: anthropic.claude-sonnet-4-5-v2:0
+    region: ca-central-1
+    contextLength: 200000
+    completionOptions:
+      temperature: 0.2
+      maxTokens: 4096
+
+  - title: Claude Sonnet 4.5 (Coding - 1M Context)
+    provider: bedrock
+    model: anthropic.claude-sonnet-4-5-v2:0
+    region: ca-central-1
+    contextLength: 1000000
+    completionOptions:
+      temperature: 0.2
+      maxTokens: 4096
+    requestOptions:
+      headers:
+        anthropic-beta: context-1m-2025-08-07
+
+  - title: Claude Haiku 4.5 (Fast)
+    provider: bedrock
+    model: anthropic.claude-haiku-4-5-20251001:0
+    region: ca-central-1
+    contextLength: 200000
+    completionOptions:
+      temperature: 0.3
+      maxTokens: 2048
+
+tabAutocompleteModel:
+  title: Claude Haiku 4.5 (Autocomplete)
+  provider: bedrock
+  model: anthropic.claude-haiku-4-5-20251001:0
+  region: ca-central-1
+  contextLength: 200000
+  completionOptions:
+    temperature: 0.3
+    maxTokens: 500
+
+embeddingsProvider:
+  provider: bedrock
+  model: amazon.titan-embed-text-v2:0
+  region: ca-central-1
+
+allowAnonymousTelemetry: false

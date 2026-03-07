@@ -1,6 +1,8 @@
 # TrailLens AI Infrastructure
 
-AWS Bedrock deployment for Claude Sonnet 4.5, enabling AI-assisted development with Claude Code and Continue.dev VSCode extensions.
+Simplified AWS Bedrock infrastructure for single developer use with Continue.dev.
+
+Supports **Claude Opus 4.6**, **Claude Sonnet 4.5**, and **Claude Haiku 4.5** for AI-assisted development.
 
 ## Quick Start
 
@@ -9,76 +11,105 @@ AWS Bedrock deployment for Claude Sonnet 4.5, enabling AI-assisted development w
 cd pulumi
 source ../scripts/setup-env.sh
 
-# Deploy to dev
-pulumi stack select dev
-pulumi up
-
-# Deploy to prod
+# Deploy
 pulumi stack select prod
 pulumi up
+
+# Get credentials
+pulumi stack output access_key_id
+pulumi stack output secret_access_key --show-secrets
 ```
 
 ## What This Deploys
 
-- **AWS Bedrock**: Claude Sonnet 4.5 model access
-- **API Gateway**: REST API proxy for Bedrock
-- **Custom Domains**:
-  - Development: `ai.dev.traillenshq.com`
-  - Production: `ai.traillenshq.com`
-- **IAM Roles**: Secure access policies for Bedrock
-- **DNS**: Route53 A records and ACM certificates
+- **IAM User** - Dedicated user for Bedrock API access
+- **IAM Policies** - Permissions for Claude Opus 4.6, Sonnet 4.5, and Haiku 4.5
+- **Access Keys** - AWS credentials for authentication
+- **DNS CNAME** - `ai.traillenshq.com` → `bedrock-runtime.ca-central-1.amazonaws.com`
 
-## Usage
+## Supported Models
 
-### Configure VSCode Extensions
+| Model                   | Use Case                 | Best For                                      |
+| ----------------------- | ------------------------ | --------------------------------------------- |
+| **Claude Opus 4.6**     | Planning & Architecture  | Complex design, system architecture           |
+| **Claude Sonnet 4.5**   | General Coding           | Writing functions, bug fixes, code reviews    |
+| **Claude Haiku 4.5**    | Autocomplete             | Inline completion, quick suggestions          |
 
-#### Continue.dev
+## Setup
 
-Add to your Continue configuration (`~/.continue/config.json`):
+See **[SETUP.md](SETUP.md)** for complete configuration instructions including:
+
+1. AWS credentials setup
+2. Continue.dev configuration for all three models
+3. Model selection guide (which model for which task)
+4. Testing and troubleshooting
+
+## Quick Continue.dev Config
+
+Add to `~/.continue/config.json`:
 
 ```json
 {
   "models": [
     {
-      "title": "Claude Sonnet 4.5 (Bedrock)",
+      "title": "Claude Opus 4.6 (Planning)",
+      "provider": "bedrock",
+      "model": "anthropic.claude-opus-4-6",
+      "region": "ca-central-1",
+      "contextLength": 200000
+    },
+    {
+      "title": "Claude Sonnet 4.5 (Coding)",
       "provider": "bedrock",
       "model": "anthropic.claude-sonnet-4-5-v2:0",
       "region": "ca-central-1",
-      "endpoint": "https://ai.traillenshq.com"
+      "contextLength": 200000
+    },
+    {
+      "title": "Claude Haiku 4.5 (Fast)",
+      "provider": "bedrock",
+      "model": "anthropic.claude-haiku-4-5-20251001:0",
+      "region": "ca-central-1",
+      "contextLength": 200000
     }
   ]
 }
 ```
 
-#### Claude Code
+Configure AWS credentials in `~/.aws/credentials`:
 
-Set environment variables:
-
-```bash
-export CLAUDE_API_BASE_URL="https://ai.traillenshq.com"
-export AWS_REGION="ca-central-1"
+```ini
+[traillens-ai]
+aws_access_key_id = YOUR_ACCESS_KEY_ID
+aws_secret_access_key = YOUR_SECRET_ACCESS_KEY
+region = ca-central-1
 ```
 
 ## Architecture
 
 ```text
-┌─────────────────────────────────────────────────────────────┐
-│                     ai.traillenshq.com                      │
-│                    (Route53 + ACM Cert)                     │
-└────────────────────────────┬────────────────────────────────┘
-                             │
-                             ▼
-┌─────────────────────────────────────────────────────────────┐
-│                      API Gateway                            │
-│                   (Regional Endpoint)                       │
-└────────────────────────────┬────────────────────────────────┘
-                             │
-                             ▼
-┌─────────────────────────────────────────────────────────────┐
-│                      AWS Bedrock                            │
-│              Claude Sonnet 4.5 v2 Model                     │
-└─────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────┐
+│         ai.traillenshq.com (CNAME)          │
+└──────────────────┬──────────────────────────┘
+                   │
+                   ▼
+┌─────────────────────────────────────────────┐
+│   bedrock-runtime.ca-central-1.amazonaws.com │
+│              AWS Bedrock                     │
+│   ┌─────────────────────────────────┐       │
+│   │  Claude Opus 4.6 (Planning)     │       │
+│   │  Claude Sonnet 4.5 (Coding)     │       │
+│   │  Claude Haiku 4.5 (Completion)  │       │
+│   └─────────────────────────────────┘       │
+└─────────────────────────────────────────────┘
 ```
+
+## Key Features
+
+- **Simplified Infrastructure** - Just IAM and DNS, no complex API Gateway
+- **Multi-Model Support** - Three Claude models for different use cases
+- **Cost-Optimized** - Use Haiku for cheap autocomplete, Opus only when needed
+- **Single Developer** - Designed for individual use, not team infrastructure
 
 ## Development
 
