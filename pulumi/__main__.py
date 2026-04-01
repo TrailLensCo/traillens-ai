@@ -11,15 +11,18 @@ Creates IAM user and policies for direct AWS Bedrock access.
 
 Supported Models:
     - Claude Opus 4.6 (Planning/Architecture)
-    - Claude Sonnet 4.5 (Coding)
+    - Claude Sonnet 4.6 (Coding - Primary)
+    - Claude Sonnet 4.5 (Coding - Secondary)
     - Claude Haiku 4.5 (Completion/Autocomplete)
+    - Claude Haiku 3.5 (Code Apply/Edits - Cheapest)
+    - Meta Llama 3 70B Instruct (Open Source Coding)
 """
-
-import pulumi
 
 from components.bedrock import create_bedrock_iam_stack
 from components.budget import create_budget_stack
 from utils.config import load_config, validate_config
+
+import pulumi
 
 
 def main():
@@ -38,16 +41,17 @@ def main():
 
     # Print configuration summary for visibility
     pulumi.log.info("=" * 70)
-    pulumi.log.info(
-        f"TrailLens AI Infrastructure Deployment - Stack: {pulumi.get_stack()}"
-    )
+    pulumi.log.info(f"TrailLens AI Infrastructure Deployment - Stack: {pulumi.get_stack()}")
     pulumi.log.info(f"Region: {config['region']}")
     pulumi.log.info(f"Domain: {config['domain']}")
     pulumi.log.info(f"Zone: {config['zone_name']}")
     pulumi.log.info("Supported Models:")
     pulumi.log.info("  - Claude Opus 4.6 (Planning)")
-    pulumi.log.info("  - Claude Sonnet 4.5 (Coding)")
-    pulumi.log.info("  - Claude Haiku 4.5 (Completion)")
+    pulumi.log.info("  - Claude Sonnet 4.6 (Coding - Primary)")
+    pulumi.log.info("  - Claude Sonnet 4.5 (Coding - Secondary)")
+    pulumi.log.info("  - Claude Haiku 4.5 (Completion/Autocomplete)")
+    pulumi.log.info("  - Claude Haiku 3.5 (Code Apply - Cheapest)")
+    pulumi.log.info("  - Meta Llama 3 70B Instruct (Open Source Coding)")
     pulumi.log.info("=" * 70)
 
     # ==========================================================================
@@ -90,8 +94,14 @@ def main():
         {
             "opus": "anthropic.claude-opus-4-6-v1",
             "sonnet": "anthropic.claude-sonnet-4-6",
+            "sonnet_4_5": "anthropic.claude-sonnet-4-5-20250929-v1:0",
             "haiku": "anthropic.claude-haiku-4-5-20251001-v1:0",
+            "haiku_3_5": "anthropic.claude-3-5-haiku-20241022-v1:0",
+            "llama3_70b": "meta.llama3-70b-instruct-v1:0",
+            "titan_embed": "amazon.titan-embed-text-v2:0",
             "titan_image": "amazon.titan-image-generator-v2:0",
+            "cohere_rerank": "cohere.rerank-v3-5:0",
+            "kimi_k2_5": "moonshotai.kimi-k2.5",
         },
     )
 

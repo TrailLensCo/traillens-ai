@@ -1,0 +1,105 @@
+# Copyright (c) 2026 TrailLensCo
+# All rights reserved.
+#
+# This file is proprietary and confidential.
+
+# LiteLLM Configuration for Local Testing
+# Fake Bedrock endpoint for testing without AWS credentials
+
+model_list:
+  # Text models (would be ca-central-1 in production)
+  - model_name: claude-opus-4-6
+    litellm_params:
+      model: bedrock/us.anthropic.claude-opus-4-6-v1
+      aws_region_name: ca-central-1
+      # Using inference profile (required for Claude 4.6 models)
+
+  - model_name: claude-sonnet-4-6
+    litellm_params:
+      model: bedrock/us.anthropic.claude-sonnet-4-6
+      aws_region_name: ca-central-1
+
+  - model_name: claude-sonnet-4-5
+    litellm_params:
+      model: bedrock/anthropic.claude-sonnet-4-5-20250929-v1:0
+      aws_region_name: ca-central-1
+
+  - model_name: claude-haiku-4-5
+    litellm_params:
+      model: bedrock/us.anthropic.claude-haiku-4-5-20251001-v1:0
+      aws_region_name: ca-central-1
+
+  # Meta Llama 3 70B Instruct (ca-central-1)
+  - model_name: llama3-70b
+    litellm_params:
+      model: bedrock/meta.llama3-70b-instruct-v1:0
+      aws_region_name: ca-central-1
+
+  # Image generation (would be us-east-1 in production)
+  - model_name: titan-image-v2
+    litellm_params:
+      model: bedrock/amazon.titan-image-generator-v2:0
+      aws_region_name: us-east-1
+
+  # Embedding model (would be ca-central-1 in production)
+  - model_name: titan-embed-v2
+    litellm_params:
+      model: bedrock/amazon.titan-embed-text-v2:0
+      aws_region_name: ca-central-1
+
+  # Rerank model (ca-central-1)
+  - model_name: cohere-rerank-v3-5
+    litellm_params:
+      model: bedrock/arn:aws:bedrock:ca-central-1::foundation-model/cohere.rerank-v3-5:0
+      aws_region_name: ca-central-1
+    model_info:
+      mode: rerank
+      skip_health_check: true  # Workaround for LiteLLM health check bug with ARN format
+
+  # Kimi K2.5 - Multimodal with Agent Swarm (us-east-1 only)
+  - model_name: kimi-k2-5
+    litellm_params:
+      model: bedrock/moonshotai.kimi-k2.5
+      aws_region_name: us-east-1
+
+general_settings:
+  # For local testing
+  master_key: "sk-test-1234567890"
+
+  # Enable detailed logging for testing
+  set_verbose: true
+
+  # Enable mock responses for testing without AWS
+  # In production, remove this and use real AWS credentials
+  mock_response: false
+
+  # CORS settings for local development
+  cors_origin: "*"
+
+  # Store models in database (required for persistence)
+  store_model_in_db: true
+
+litellm_settings:
+  # Disable telemetry for local testing
+  telemetry: false
+
+  # Drop parameters not supported by provider
+  drop_params: true
+
+  # Success callback for logging
+  success_callback: ["langfuse"]
+
+  # Set timeout
+  request_timeout: 600
+
+  # Redis caching
+  cache: true
+  cache_params:
+    type: redis
+    host: redis
+    port: 6379
+    supported_call_types:
+      - "acompletion"
+      - "atext_completion"
+      - "aembedding"
+      - "atranscription"

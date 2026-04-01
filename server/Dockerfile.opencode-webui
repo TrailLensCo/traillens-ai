@@ -1,0 +1,40 @@
+# Copyright (c) 2025 TrailLensCo
+# All rights reserved.
+#
+# This file is proprietary and confidential.
+
+FROM node:22-alpine
+
+# Install git, openssh-client, and bash for git operations
+RUN apk add --no-cache git openssh-client bash sudo
+
+# Install OpenCode CLI and mobile plugin globally
+RUN npm install -g opencode-ai@latest opencode-mobile@latest
+
+# Create app directory
+WORKDIR /app
+
+# Accept UID/GID as build args (defaults match typical macOS user)
+ARG USER_UID=501
+ARG USER_GID=20
+ARG USERNAME=user
+
+# Create group and user with matching UID/GID
+# Note: GID 20 (staff) usually exists on Alpine, so we use it if available
+RUN if ! getent group ${USER_GID} > /dev/null 2>&1; then \
+        addgroup -g ${USER_GID} ${USERNAME}; \
+    fi && \
+    adduser -u ${USER_UID} -G $(getent group ${USER_GID} | cut -d: -f1) \
+            -D -h /home/${USERNAME} ${USERNAME} && \
+    mkdir -p /home/${USERNAME}/.config/opencode && \
+    chown -R ${USERNAME}:$(getent group ${USER_GID} | cut -d: -f1) /home/${USERNAME}
+
+# Switch to non-root user
+USER ${USERNAME}
+WORKDIR /home/${USERNAME}
+
+# Expose OpenCode Web UI port
+EXPOSE 3001
+
+# Start OpenCode Web UI (includes both server and web interface)
+CMD ["opencode", "web", "--port", "3001", "--hostname", "0.0.0.0"]

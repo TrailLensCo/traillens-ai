@@ -1,0 +1,132 @@
+# Copyright (c) 2025 TrailLensCo
+# All rights reserved.
+#
+# This file is proprietary and confidential.
+
+version: '3.8'
+
+services:
+  # Redis Cache for LiteLLM
+  redis:
+    image: docker.io/library/redis:7-alpine
+    container_name: litellm-redis
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # PostgreSQL Database for LiteLLM
+  litellm-db:
+    image: docker.io/library/postgres:16
+    container_name: litellm-db
+    environment:
+      - POSTGRES_USER=llmproxy
+      - POSTGRES_PASSWORD=dbpassword9090
+      - POSTGRES_DB=litellm
+    volumes:
+      - litellm-db-data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U llmproxy -d litellm"]
+      interval: 1s
+      timeout: 5s
+      retries: 10
+
+  # LiteLLM Proxy - OpenAI-compatible API for Bedrock (with database support)
+  litellm:
+    image: docker.litellm.ai/berriai/litellm-database:main-stable
+    container_name: litellm
+    ports:
+      - "8001:4000"
+    volumes:
+      - ./config/litellm-config.yaml:/app/config.yaml:ro
+    environment:
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_REGION=${AWS_REGION}
+      - LITELLM_MASTER_KEY=${LITELLM_MASTER_KEY}
+      - LITELLM_SALT_KEY=${LITELLM_SALT_KEY:-sk-salt-1234}
+      - DATABASE_URL=postgresql://llmproxy:dbpassword9090@litellm-db:5432/litellm
+      - STORE_MODEL_IN_DB=True
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    command: ["--config", "/app/config.yaml", "--port", "4000", "--detailed_debug"]
+    depends_on:
+      redis:
+        condition: service_healthy
+      litellm-db:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4000/health/liveliness"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # OpenCode Web - Server + Web UI in one
+  opencode-webui:
+    build:
+      context: .
+      dockerfile: Dockerfile.opencode-webui
+      args:
+        USER_UID: ${USER_UID:-501}
+        USER_GID: ${USER_GID:-20}
+        USERNAME: user
+    container_name: opencode-webui
+    ports:
+      - "3001:3001"
+    volumes:
+      # OpenCode configuration
+      - ./config/opencode/opencode.json:/home/user/.config/opencode/opencode.json:ro
+      # Mount user's src directory (read/write)
+      - ${HOME}/src:/home/user/src:rw
+      # Mount git config for commits
+      - ${HOME}/.gitconfig:/home/user/.gitconfig:ro
+      # Mount SSH directory for private repos (read-only for security)
+      - ${HOME}/.ssh:/home/user/.ssh:ro
+    environment:
+      - OPENCODE_SERVER_PASSWORD=${OPENCODE_SERVER_PASSWORD}
+      - LITELLM_MASTER_KEY=${LITELLM_MASTER_KEY}
+      # Ensure OpenCode uses correct home directory
+      - HOME=/home/user
+    depends_on:
+      - litellm
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "3001"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: docker.io/library/nginx:alpine
+    container_name: nginx
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - litellm
+      - opencode-webui
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  default:
+    name: ai-services
+
+volumes:
+  litellm-db-data:
+  redis-data:

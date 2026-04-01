@@ -1,56 +1,120 @@
+name: LiteLLM + AWS Bedrock Config
+version: 1.0.0
+schema: v1
+
 models:
-  - title: Claude Opus 4.6 (Planning)
-    provider: bedrock
-    model: anthropic.claude-opus-4-6
-    region: ca-central-1
-    contextLength: 200000
-    completionOptions:
-      temperature: 0.0
-      maxTokens: 8192
+  # Primary chat model - Claude Sonnet 4.6 via LiteLLM
+  - name: Claude Sonnet 4.6 (LiteLLM)
+    provider: openai
+    model: claude-sonnet-4-6
+    apiBase: http://localhost:8001/v1
+    apiKey: sk-test-1234567890
+    roles:
+      - chat
+      - edit
 
-  - title: Claude Sonnet 4.5 (Coding)
-    provider: bedrock
-    model: anthropic.claude-sonnet-4-5-v2:0
-    region: ca-central-1
-    contextLength: 200000
-    completionOptions:
-      temperature: 0.2
-      maxTokens: 4096
+  # Fast model - Claude Haiku 4.5 via LiteLLM
+  - name: Claude Haiku 4.5 (LiteLLM)
+    provider: openai
+    model: claude-haiku-4-5
+    apiBase: http://localhost:8001/v1
+    apiKey: sk-test-1234567890
+    roles:
+      - autocomplete
+      - chat
+      - edit
 
-  - title: Claude Sonnet 4.5 (Coding - 1M Context)
-    provider: bedrock
-    model: anthropic.claude-sonnet-4-5-v2:0
-    region: ca-central-1
-    contextLength: 1000000
-    completionOptions:
-      temperature: 0.2
-      maxTokens: 4096
-    requestOptions:
-      headers:
-        anthropic-beta: context-1m-2025-08-07
+  # Powerful model - Claude Opus 4.6 via LiteLLM
+  - name: Claude Opus 4.6 (LiteLLM)
+    provider: openai
+    model: claude-opus-4-6
+    apiBase: http://localhost:8001/v1
+    apiKey: sk-test-1234567890
+    roles:
+      - chat
+      - edit
 
-  - title: Claude Haiku 4.5 (Fast)
-    provider: bedrock
-    model: anthropic.claude-haiku-4-5-20251001:0
-    region: ca-central-1
-    contextLength: 200000
-    completionOptions:
-      temperature: 0.3
-      maxTokens: 2048
+  # Embedding model - Titan Embed Text V2 via LiteLLM
+  - name: Titan Embed V2 (LiteLLM)
+    provider: openai
+    model: titan-embed-v2
+    apiBase: http://localhost:8001/v1
+    apiKey: sk-test-1234567890
+    roles:
+      - embed
 
-tabAutocompleteModel:
-  title: Claude Haiku 4.5 (Autocomplete)
-  provider: bedrock
-  model: anthropic.claude-haiku-4-5-20251001:0
-  region: ca-central-1
-  contextLength: 200000
-  completionOptions:
-    temperature: 0.3
-    maxTokens: 500
+  # Rerank model - Cohere Rerank V3.5 via LiteLLM
+  - name: Cohere Rerank V3.5 (LiteLLM)
+    provider: openai
+    model: cohere-rerank-v3-5
+    apiBase: http://localhost:8001/v1
+    apiKey: sk-test-1234567890
+    roles:
+      - rerank
 
-embeddingsProvider:
-  provider: bedrock
-  model: amazon.titan-embed-text-v2:0
-  region: ca-central-1
+  # Kimi K2.5 - Multimodal with Agent Swarm via LiteLLM
+  - name: Kimi K2.5 (LiteLLM)
+    provider: openai
+    model: kimi-k2-5
+    apiBase: http://localhost:8001/v1
+    apiKey: sk-test-1234567890
+    roles:
+      - chat
+      - edit
 
-allowAnonymousTelemetry: false
+  # Titan Image Generator V2 - Image generation via LiteLLM
+  - name: Titan Image V2 (LiteLLM)
+    provider: openai
+    model: titan-image-v2
+    apiBase: http://localhost:8001/v1
+    apiKey: sk-test-1234567890
+    roles:
+      - chat
+      - edit
+
+# Context Providers - Enable '@' mentions for rich context injection
+context:
+  # File reference - Include specific files in context
+  - provider: file
+
+  # Code reference - Include specific functions/classes from project
+  - provider: code
+
+  # Git diff - Review changes on current branch
+  - provider: diff
+
+  # Current file - Reference the currently open file
+  - provider: currentFile
+
+  # Terminal - Reference last command and its output
+  - provider: terminal
+
+  # Open files - Reference all open files
+  - provider: open
+    params:
+      onlyPinned: false  # Set to true to only include pinned files
+
+  # Clipboard - Reference recent clipboard items
+  - provider: clipboard
+
+  # Tree - Reference workspace structure
+  - provider: tree
+
+  # Problems - Retrieve issues from current file
+  - provider: problems
+
+  # Debugger - Reference local variables in debugger (VS Code only)
+  - provider: debugger
+    params:
+      stackDepth: 3  # Number of stack levels to include
+
+  # Repository map - Reference codebase outline
+  - provider: repo-map
+    params:
+      includeSignatures: true  # Include function/class signatures
+
+  # Operating system - Reference architecture and platform
+  - provider: os
+
+
+
